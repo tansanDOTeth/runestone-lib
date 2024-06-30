@@ -68,8 +68,6 @@ export interface RunestoneStorage {
    * @param vout output index in transaction
    */
   getUtxoBalance(txid: string, vout: number): Promise<RuneUtxoBalance[]>;
-
-  getUtxoBalances(txidAndVouts: [string, number][]): Promise<RuneUtxoBalance[]>;
 }
 
 export type RunestoneIndexerOptions = {
