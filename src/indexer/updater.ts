@@ -453,6 +453,31 @@ export class RuneUpdater implements RuneBlockIndex {
       utxoBalancesByOutputLocation.set(location, balances);
     }
 
+    // Get the utxo balances that are not cached
+    const nonCachedUtxoBalances = [];
+
+    for (const input of tx.vin) {
+      if ('coinbase' in input) continue;
+      if (utxoBalancesByOutputLocation.has(`${input.txid}:${input.vout}`)) continue;
+      nonCachedUtxoBalances.push(input);
+    }
+
+    // This is an arbitrary number, but it should be enough to avoid large UTXO lookups
+    // and still be able to handle the majority of transactions
+    // TODO: implement batching for this later
+    if (1 <= nonCachedUtxoBalances.length && nonCachedUtxoBalances.length <= 10) {
+      const txidAndVouts = nonCachedUtxoBalances.map(
+        (input) => [input.txid, input.vout] as [string, number]
+      );
+      const utxoBalances = await this._storage.getUtxoBalances(txidAndVouts);
+      for (const utxoBalance of utxoBalances) {
+        const location = `${utxoBalance.txid}:${utxoBalance.vout}`;
+        const balances = utxoBalancesByOutputLocation.get(location) ?? [];
+        balances.push(utxoBalance);
+        utxoBalancesByOutputLocation.set(location, balances);
+      }
+    }
+
     for (const input of tx.vin) {
       if ('coinbase' in input) {
         continue;
