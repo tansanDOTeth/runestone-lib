@@ -292,6 +292,7 @@ export class RuneUpdater implements RuneBlockIndex {
 
         if (!etchingByRuneId.has(runeIdString)) {
           etchingByRuneId.set(runeIdString, etching);
+          this.etchings.push(etching);
         }
 
         this.utxoBalances.push({
@@ -388,6 +389,10 @@ export class RuneUpdater implements RuneBlockIndex {
       etchingByRuneId.get(runeLocation) ?? (await this._storage.getEtching(runeLocation));
     if (etching === null || !etching.valid || !etching.terms) {
       return None;
+    }
+
+    if (!etchingByRuneId.has(runeLocation)) {
+      this.etchings.push(etching);
     }
 
     const terms = etching.terms;
